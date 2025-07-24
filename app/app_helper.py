@@ -55,13 +55,13 @@ def _bulk_get_linker_entities(texts, ner_model, ref_part_model):
     cit_spans_list, other_spans_list = _bulk_partition_spans(spans_list)
 
     ref_part_input = reduce(lambda a, b: a + [(sub_b.text, b[0]) for sub_b in b[1]], enumerate(cit_spans_list), [])
-    all_raw_ref_part_spans = list(ref_part_model.bulk_predict(ref_part_input, as_tuples=True))
+    all_raw_ref_part_spans = list(ref_part_model.bulk_predict_as_tuples(ref_part_input, BATCH_SIZE))
     all_raw_ref_part_span_map = defaultdict(list)
     for ref_part_span, input_idx in all_raw_ref_part_spans:
         all_raw_ref_part_span_map[input_idx] += [ref_part_span]
 
     output = []
-    for input_idx, cit_spans, other_spans in enumerate(zip(cit_spans_list, other_spans_list)):
+    for input_idx, (cit_spans, other_spans) in enumerate(zip(cit_spans_list, other_spans_list)):
         ref_parts_list = all_raw_ref_part_span_map[input_idx]
         output += [(cit_spans, ref_parts_list, other_spans)]
     return output
