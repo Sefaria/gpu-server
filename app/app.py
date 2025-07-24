@@ -29,14 +29,11 @@ def create_app():
         data = request.get_json(silent=True)
         if not data or 'text' not in data:
             return jsonify({"error": "Missing 'text' in request body."}), 400
+        with_span_text = request.args.get('with_span_text', '0') == '1'
         ner_model = models_by_type_and_lang['named_entity'][data['lang']]
         spans: list[NESpan] = ner_model.predict(data['text'])
         return jsonify({"spans": [
-            {
-                "text": span.text,
-                "range": span.range,
-                "label": span.label
-            } for span in spans
+            span.serialize(with_span_text) for span in spans
         ]}), 200
     return app
 

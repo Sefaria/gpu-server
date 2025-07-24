@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 import re
-from typing import Union, Any
+from typing import Any
 from ne_span import NESpan, NEDoc
 import spacy
 

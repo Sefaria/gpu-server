@@ -1,5 +1,4 @@
 from abc import ABC, abstractmethod
-from dataclasses import dataclass
 from functools import cached_property
 from spacy_function_registry import get_spacy_tokenizer
 
@@ -125,3 +124,17 @@ class NESpan(_Subspannable):
 
     def _get_subspan_offset(self) -> int:
         return self.__start
+
+    def serialize(self, with_text=False) -> dict:
+        """
+        Serialize the NESpan to a dictionary.
+        :param with_text: If True, include the text of the span in the serialization.
+        :return: A dictionary representation of the NESpan.
+        """
+        data = {
+            "range": self.range,
+            "label": self.__label
+        }
+        if with_text:
+            data["text"] = self.text
+        return data
