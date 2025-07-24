@@ -21,10 +21,11 @@ def create_app():
     app.config.from_object('config.BaseConfig')
     app.config.from_object('local_config.LocalConfig')
 
-    models_by_type_and_lang = create_models_from_config(app.config)
+    with app.app_context():
+        models_by_type_and_lang = create_models_from_config(app.config)
 
     @app.route('/recognize-entities', methods=['POST'])
-    def recognize_entities():  # put application's code here
+    def recognize_entities():
         data = request.get_json(silent=True)
         if not data or 'text' not in data:
             return jsonify({"error": "Missing 'text' in request body."}), 400
