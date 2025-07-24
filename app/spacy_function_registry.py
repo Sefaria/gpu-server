@@ -16,12 +16,3 @@ def inner_punct_tokenizer_factory():
                          infix_finditer=infix_re.finditer,
                          token_match=None)
     return inner_punct_tokenizer
-
-
-def get_spacy_tokenizer():
-    """
-    language agnostic spacy tokenizer that uses inner punctuation
-    @return:
-    """
-    nlp = spacy.blank("en")
-    return inner_punct_tokenizer_factory()(nlp)

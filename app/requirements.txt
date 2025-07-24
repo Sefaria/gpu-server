@@ -1,3 +1,4 @@
 spacy~=3.7.0
 google-cloud-storage==1.32.0
 flask~=3.1.1
+git+https://github.com/Sefaria/ne_span.git@v0.7.0
