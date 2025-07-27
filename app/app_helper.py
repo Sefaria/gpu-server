@@ -3,6 +3,10 @@ from collections import defaultdict
 
 
 BATCH_SIZE = 150
+LABEL2TYPE = {
+    'מקור': 'citation',
+    'Citation': 'citation',
+}
 
 
 def make_recognize_entities_output(text, ner_model, ref_part_model, with_span_text=False):
@@ -34,7 +38,7 @@ def _get_linker_entities(text, ner_model, ref_part_model):
 def _partition_spans(spans):
     cit_spans, other_spans = [], []
     for span in spans:
-        if span.label == 'מקור':
+        if LABEL2TYPE.get(span.label) == 'citation':
             cit_spans.append(span)
         else:
             other_spans.append(span)
@@ -71,13 +75,13 @@ def _serialize_linker_entities(cit_spans, ref_parts_list, other_spans, with_span
     serial = [span.serialize(with_span_text) for span in other_spans]
     for span, ref_parts in zip(cit_spans, ref_parts_list):
         serialized_span = span.serialize(with_span_text)
-        serialized_span['ref_parts'] = [part.serialize(with_span_text) for part in ref_parts]
+        serialized_span['parts'] = [part.serialize(with_span_text) for part in ref_parts]
         serial.append(serialized_span)
-    return serial
+    return {'entities': serial}
 
 
 def _bulk_serialize_linker_entities(results, with_span_text=False):
     serial = []
     for cit_spans, ref_parts_list, other_spans in results:
-        serial.append(_serialize_linker_entities(cit_spans, ref_parts_list, other_spans))
-    return serial
+        serial.append(_serialize_linker_entities(cit_spans, ref_parts_list, other_spans, with_span_text))
+    return {'results': serial}
