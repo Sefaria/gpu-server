@@ -19,7 +19,7 @@ def create_models_from_config(config):
 def create_app():
     app = Flask(__name__)
     app.config.from_object('config.BaseConfig')
-    app.config.from_object('local_config.LocalConfig')
+    app.config.from_envvar('APP_CONFIG')
 
     with app.app_context():
         models_by_type_and_lang = create_models_from_config(app.config)
