@@ -4,14 +4,12 @@ WORKDIR /app
 
 RUN apt-get update && apt-get install -y git && rm -rf /var/lib/apt/lists/*
 
-COPY app/requirements.txt .
+COPY requirements.txt .
 
 RUN pip install --no-cache-dir -r requirements.txt && \
     pip install --no-cache-dir gunicorn
 
-COPY app/ .
-COPY test_config.py .
-COPY simple_test.py .
+COPY . .
 
 EXPOSE 8000
 
