@@ -94,7 +94,7 @@ jobs:
             type=ref,event=tag
             type=sha,enable=true,priority=100,prefix=sha-,suffix=-${{ steps.date.outputs.date }},format=short
             type=sha
-            type=semver,pattern={{raw}},value=${{ needs.release.outputs.version}}
+            type=semver,pattern={{raw}},value=${{ needs.version.outputs.version}}
           flavor: |
             latest=true
       - name: build and push

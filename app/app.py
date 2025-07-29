@@ -44,7 +44,6 @@ def create_app():
         texts = data['texts']
         results = make_bulk_recognize_entities_output(texts, ner_model, ref_part_model, with_span_text)
         return jsonify(results), 200
-
     return app
 
 
