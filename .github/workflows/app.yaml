@@ -89,7 +89,7 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           images: |
-            us-east1-docker.pkg.dev/${{ secrets.GCP_PROJECT }}/container/ner-server
+            us-east1-docker.pkg.dev/${{ secrets.GCP_PROJECT }}/containers/ner-server
           tags: |
             type=ref,event=tag
             type=sha,enable=true,priority=100,prefix=sha-,suffix=-${{ steps.date.outputs.date }},format=short
