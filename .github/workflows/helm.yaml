@@ -1,0 +1,79 @@
+name: Publish Chart
+
+on:
+  push:
+    paths:
+      - "chart/**"
+
+jobs:
+  publish:
+    concurrency: refs/notes/semantic-release
+    name: Release Chart
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # needed to write releases
+      id-token: 'write'
+    if: |
+      (github.repository == 'Sefaria/gpu-server')
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          # Fetch entire history. Required for chart-releaser; see https://github.com/helm/chart-releaser-action/issues/13#issuecomment-602063896
+          fetch-depth: 0
+      - name: fetch head of branch to ensure semantic can run
+        run: git pull origin $GITHUB_REF
+      - name: Download yq
+        run: |
+          wget -nv -nc -O yq https://github.com/mikefarah/yq/releases/download/v4.20.2/yq_linux_amd64
+          chmod +x yq
+          echo "$PWD" >> $GITHUB_PATH
+      - name: setup release rules
+        run: chart/release-rules.sh
+      - uses: cycjimmy/semantic-release-action@v4
+        id: semantic
+        with:
+          working_directory: ./chart
+          semantic_version: 24.2.7
+          extra_plugins: |
+            conventional-changelog-conventionalcommits
+            semantic-release-monorepo
+            @semantic-release/exec
+            @semantic-release/git
+            @semantic-release/github
+            @semantic-release/release-notes-generator
+            @semantic-release/commit-analyzer
+          extends: |
+            semantic-release-monorepo
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Get chartVersion
+        id: chartVersion
+        run: |
+          if [[ -z "${{ steps.semantic.outputs.new_release_version }}" ]]; then
+            if [[ -z "$(git tag --points-at HEAD -l 'helm*')" ]]; then
+              echo "No chart version available"
+              exit 1
+            else
+              echo "chartVersion=$(git tag --points-at HEAD -l 'chart*' | sed 's/helm-//' )" >> $GITHUB_OUTPUT
+            fi
+          else
+            echo "chartVersion=${{ steps.semantic.outputs.new_release_version }}" >> $GITHUB_OUTPUT
+          fi
+      - id: auth
+        name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v1
+        with:
+          token_format: 'access_token'
+          workload_identity_provider: 'projects/${{ secrets.GCP_PROJECT_ID}}/locations/global/workloadIdentityPools/github/providers/github'
+          service_account: '${{ secrets.GCP_SA }}'
+      - name: Login to GAR
+        uses: docker/login-action@v1
+        with:
+          registry: us-docker.pkg.dev
+          username: oauth2accesstoken
+          password: '${{ steps.auth.outputs.access_token }}'
+      - name: Publish to OCI
+        run: |
+          helm package chart
+          helm push ner-server-${{ steps.chartVersion.outputs.chartVersion }}.tgz oci://us-east-1-docker.pkg.dev/${{ secrets.GCP_PROJECT}}/containers/charts/
