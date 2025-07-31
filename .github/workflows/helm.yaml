@@ -76,4 +76,4 @@ jobs:
       - name: Publish to OCI
         run: |
           helm package chart
-          helm push sefaria-ner-server-${{ steps.chartVersion.outputs.chartVersion }}.tgz oci://us-east-1-docker.pkg.dev/${{ secrets.GCP_PROJECT}}/containers/charts/
+          helm push sefaria-ner-server-${{ steps.chartVersion.outputs.chartVersion }}.tgz oci://us-east1-docker.pkg.dev/${{ secrets.GCP_PROJECT }}/containers/ner-server/chart
