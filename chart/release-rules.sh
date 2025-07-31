@@ -25,7 +25,7 @@ plugins:
   - - "@semantic-release/github"
     - "successComment": false
   - - "@semantic-release/exec"
-    - "prepareCmd": "chart-prerelease.sh ${nextRelease.gitTag}"
+    - "prepareCmd": "chart-prerelease.sh \${nextRelease.gitTag}"
   - - "@semantic-release/git"
     - assets:
         - Chart.yaml
