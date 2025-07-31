@@ -32,7 +32,6 @@ plugins:
 EOF
 
 export branch=$(git branch --show-current)
-
 export channel=$(echo $branch | awk '{print tolower($0)}' | sed 's|.*/\([^/]*\)/.*|\1|; t; s|.*|\0|' | sed 's/[^a-z0-9\.\-]//g')
 
 if [[ $branch != "main" ]]; then
