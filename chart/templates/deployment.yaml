@@ -1,0 +1,34 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}
+  namespace: {{ .Release.Namespace }}
+  labels: {{ include "nerServer.labels" . | nindent 4 }}
+spec:
+  progressDeadlineSeconds: 600
+  replicas: {{ .Values.deployment.replicaCount }}
+  revisionHistoryLimit: 2
+  selector:
+    matchLabels: {{ include "nerServer.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels: {{ include "nerServer.selectorLabels" . | nindent 8 }}
+    spec:
+      containers:
+      - name: gpu-server
+        image: "{{ .Values.deployment.image.registry }}/{{ .Values.deployment.image.name }}:{{ .Values.deployment.image.tag | default .Chart.AppVersion }}"
+        env:
+          - name: HELM_REVISION
+            value: {{ .Release.Revision | quote }}
+        envFrom:
+          - configMapRef:
+              name: {{ .Release.Name }}
+        imagePullPolicy: {{ .Values.deployment.image.pullPolicy }}
+        resources: {{ .Values.deployment.resources | toYaml | nindent 10 }}
+        ports:
+          - name: http
+            containerPort: 8000
+            protocol: TCP
+      {{- if or .Values.serviceAccount.create .Values.serviceAccount.name }}
+      serviceAccountName: {{ include "nerServer.serviceAccount.name" . }}
+      {{- end }}
