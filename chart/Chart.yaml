@@ -9,5 +9,5 @@ maintainers:
   - name: Sefaria
     email: dev@sefaria.org
 type: application
-version: 1.0.0-helm-chart.5
+version: 1.0.0
 appVersion: v1.0.0
