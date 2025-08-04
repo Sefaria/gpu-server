@@ -1,4 +1,3 @@
-{{- if .Values.serviceAccount.create }}
 apiVersion: v1
 kind: Service
 metadata:
@@ -9,4 +8,3 @@ spec:
   - port: 8000
     targetPort: http
   selector: {{ include "nerServer.selectorLabels" . | nindent 4 }}
-{{- end }}
