@@ -21,11 +21,11 @@ spec:
           - name: HELM_REVISION
             value: {{ .Release.Revision | quote }}
           - name: APP_CONFIG
-            value: /app/config.py
+            value: /app/{{ include "nerServer.configfiles.config" . }}
         volumeMounts:
           - name: config
-            mountPath: /app/config.py
-            subPath: config.py
+            mountPath: /app/{{ include "nerServer.configfiles.config" . }}
+            subPath: {{ include "nerServer.configfiles.config" . }}
         imagePullPolicy: {{ .Values.deployment.image.pullPolicy }}
         resources: {{ .Values.deployment.resources | toYaml | nindent 10 }}
         ports:

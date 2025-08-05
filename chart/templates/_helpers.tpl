@@ -30,3 +30,6 @@ app.kubernetes.io/managed-by: {{ .Release.Service }}
 {{ .Values.serviceAccount.name | default .Release.Name }}-files
 {{- end }}
 
+{{- define "nerServer.configfiles.config" -}}
+environment-config.py
+{{- end }}
