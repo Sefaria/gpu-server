@@ -4,5 +4,5 @@ metadata:
   name: {{ include "nerServer.configfiles.name" . }} 
   namespace: {{ .Release.Namespace }}
 data:
-  config.py: |
+  {{ include "nerServer.configfiles.config" . }}: |
     MODEL_PATHS = {{ .Values.modelPaths | toJson }}
