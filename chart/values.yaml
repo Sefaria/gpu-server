@@ -16,7 +16,19 @@ deployment:
 modelPaths:
   - arch: spacy
     lang: he
-    path: 
+    path: gs://sefaria-ml-models/ref_model.tar.gz
+    type: named_entity
+  - arch: spacy
+    lang: en
+    path: gs://sefaria-ml-models/en_ner_model.tar.gz
+    type: named_entity
+  - arch: spacy
+    lang: he
+    path: gs://sefaria-ml-models/subref_model.tar.gz
+    type: ref_part
+  - arch: spacy
+    lang: en
+    path: gs://sefaria-ml-models/en_subref_model.tar.gz
     type: ref_part
 
 serviceAccount:
