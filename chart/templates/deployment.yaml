@@ -20,9 +20,12 @@ spec:
         env:
           - name: HELM_REVISION
             value: {{ .Release.Revision | quote }}
-        envFrom:
-          - configMapRef:
-              name: {{ .Release.Name }}
+          - name: APP_CONFIG
+            value: /app/config.py
+        volumeMounts:
+          - name: config
+            mountPath: /app/config.py
+            subPath: config.py
         imagePullPolicy: {{ .Values.deployment.image.pullPolicy }}
         resources: {{ .Values.deployment.resources | toYaml | nindent 10 }}
         ports:
@@ -32,3 +35,7 @@ spec:
       {{- if or .Values.serviceAccount.create .Values.serviceAccount.name }}
       serviceAccountName: {{ include "nerServer.serviceAccount.name" . }}
       {{- end }}
+      volumes:
+        - name: config
+          configMap:
+            name: {{ include "nerServer.configfiles.name" . }} 
