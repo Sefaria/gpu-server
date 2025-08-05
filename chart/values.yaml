@@ -1,0 +1,25 @@
+deployment:
+  replicaCount: 1
+  image:
+    tag: ""
+    registry: ""
+    name: ner-server
+    imagePullPolicy: IfNotPresent
+  resources:
+    requests:
+      cpu: 100m
+      memory: 500Mi
+    limits:
+      cpu: 200m
+      memory: 1Gi
+
+modelPaths:
+  - arch: spacy
+    lang: he
+    path: 
+    type: ref_part
+
+serviceAccount:
+  create: true
+  # name:
+  annotations: {}

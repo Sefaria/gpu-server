@@ -12,7 +12,6 @@ def create_models_from_config(config):
             models_by_type_and_lang[model_type] = {}
         model = NERFactory.create(cfg['arch'], cfg['path'])
         models_by_type_and_lang[model_type][cfg['lang']] = model
-
     return models_by_type_and_lang
 
 

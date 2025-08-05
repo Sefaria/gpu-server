@@ -1,0 +1,13 @@
+apiVersion: v2
+name: sefaria-ner-server
+description: A Helm chart for deploying Sefaria NER Server
+icon: https://raw.githubusercontent.com/Sefaria/Sefaria-Project/e757b59968adbc0d6845eaa1b420f934ad864d32/static/img/logo/icon.svg
+home: https://sefaria.org
+sources:
+  - https://github.com/Sefaria/gpu-server
+maintainers:
+  - name: Sefaria
+    email: dev@sefaria.org
+type: application
+version: 1.0.1
+appVersion: v1.0.0

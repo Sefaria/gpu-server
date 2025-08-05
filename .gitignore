@@ -1,3 +1,4 @@
 app/local_config.py
+.releaserc
 /.idea
 __pycache__/

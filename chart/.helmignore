@@ -1,0 +1,4 @@
+chart-prerelease.sh
+release-rules.sh
+package.json
+.releaserc
