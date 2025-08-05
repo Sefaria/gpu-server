@@ -1,7 +1,8 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ .Release.Name }}
+  name: {{ include "nerServer.configfiles.name" . }} 
   namespace: {{ .Release.Namespace }}
 data:
-  MODEL_PATHS: {{ .Values.modelPaths | toJson | quote }}
+  {{ include "nerServer.configfiles.config" . }}: |
+    MODEL_PATHS = {{ .Values.modelPaths | toJson }}
