@@ -8,8 +8,11 @@ class GoogleStorageManager(object):
     @classmethod
     def get_bucket(cls, bucket_name):
         if getattr(cls, 'client', None) is None:
-            # for local development, change below line to cls.client = storage.Client(project="production-deployment")
-            cls.client = storage.Client.from_service_account_json()
+            # for local development, make sure that your local gcloud config has access to the gcs bucket
+            # optionally gcloud config configurations create <profile name>
+            # gcloud config set account <user@org>
+            # gcloud config set project <project>
+            cls.client = storage.Client()
         bucket = cls.client.get_bucket(bucket_name)
         return bucket
 
