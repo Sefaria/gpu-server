@@ -1,6 +1,8 @@
 from flask import current_app
 from google.cloud import storage
 from io import BytesIO
+import re
+import tarfile
 
 
 class GoogleStorageManager(object):
@@ -27,3 +29,13 @@ class GoogleStorageManager(object):
         bucket = cls.get_bucket(bucket_name)
         blob = bucket.blob(filename)
         return BytesIO(blob.download_as_bytes())
+
+    @staticmethod
+    def get_tar_buffer(path: str):
+        # file is located in Google Cloud
+        # file is expected to be a tar.gz of the contents of the model folder (not the folder itself)
+        match = re.match(r"gs://([^/]+)/(.+)$", path)
+        bucket_name = match.group(1)
+        blob_name = match.group(2)
+        model_buffer = GoogleStorageManager.get_filename(blob_name, bucket_name)
+        return tarfile.open(fileobj=model_buffer)

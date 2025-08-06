@@ -1,32 +1,9 @@
 from abc import ABC, abstractmethod
-import re
 from typing import Any
+from tempfile import TemporaryDirectory
 from ne_span import NESpan, NEDoc
+from google_storage_manager import GoogleStorageManager
 import spacy
-
-
-def load_spacy_model(path: str) -> spacy.Language:
-    import tarfile
-    from tempfile import TemporaryDirectory
-    from google_storage_manager import GoogleStorageManager
-    from spacy_function_registry import inner_punct_tokenizer_factory  # this looks unused, but spacy.load() expects this function to be in scope
-
-    using_gpu = spacy.prefer_gpu()
-
-    if path.startswith("gs://"):
-        # file is located in Google Cloud
-        # file is expected to be a tar.gz of the contents of the model folder (not the folder itself)
-        match = re.match(r"gs://([^/]+)/(.+)$", path)
-        bucket_name = match.group(1)
-        blob_name = match.group(2)
-        model_buffer = GoogleStorageManager.get_filename(blob_name, bucket_name)
-        tar_buffer = tarfile.open(fileobj=model_buffer)
-        with TemporaryDirectory() as tempdir:
-            tar_buffer.extractall(tempdir)
-            nlp = spacy.load(tempdir)
-    else:
-        nlp = spacy.load(path)
-    return nlp
 
 
 class NERFactory:
@@ -87,7 +64,22 @@ class AbstractNER(ABC):
 class SpacyNER(AbstractNER):
 
     def __init__(self, model_location: str):
-        self.__ner = load_spacy_model(model_location)
+        self.__ner = self.__load_model(model_location)
+
+    @staticmethod
+    def __load_model(path: str):
+        from spacy_function_registry import inner_punct_tokenizer_factory  # this looks unused, but spacy.load() expects this function to be in scope
+
+        using_gpu = spacy.prefer_gpu()
+
+        if path.startswith("gs://"):
+            tar_buffer = GoogleStorageManager.get_tar_buffer(path)
+            with TemporaryDirectory() as tempdir:
+                tar_buffer.extractall(tempdir)
+                nlp = spacy.load(tempdir)
+        else:
+            nlp = spacy.load(path)
+        return nlp
 
     @staticmethod
     def __doc_to_ne_spans(doc) -> list[NESpan]:
@@ -109,6 +101,83 @@ class SpacyNER(AbstractNER):
 
 
 class HuggingFaceNER(AbstractNER):
+    """
+
+    - Loads a token-classification model + tokenizer (local path or HF Hub id).
+    - Supports loading a tar.gz from GCS (same convention as SpacyNER).
+    - Uses the pipeline() with aggregation_strategy="simple" to get character offsets.
+    - Returns NESpan objects built from (start, end, label).
+    """
 
     def __init__(self, model_location: str):
-        pass
+        self.__tmpdir = None
+        self.__pipe = self.__load_pipeline(model_location)
+
+    def __load_pipeline(self, model_location: str):
+        # Lazily import so the rest of the module can be used without transformers installed
+        try:
+            from transformers import AutoTokenizer, AutoModelForTokenClassification, pipeline
+            import torch
+        except ImportError as e:
+            raise ImportError(
+                "HuggingFaceNER requires the 'transformers' and 'torch' packages."
+            ) from e
+        local_location = model_location
+        if model_location.startswith("gs://"):
+            # Expecting a tar.gz of the *contents* of the model folder (not the folder itself)
+            tar_buffer = GoogleStorageManager.get_tar_buffer(model_location)
+            # Save temp dir because transformers can lazy load the model and tokenizer
+            self.__tmpdir = TemporaryDirectory()
+            tar_buffer.extractall(self.__tmpdir.name)
+            local_location = self.__tmpdir.name
+
+        # Load tokenizer/model and build a pipeline
+        tokenizer = AutoTokenizer.from_pretrained(local_location)
+        self.__model = AutoModelForTokenClassification.from_pretrained(local_location)
+        device = 0 if torch.cuda.is_available() else -1
+
+        return pipeline(
+            task="ner",
+            model=self.__model,
+            tokenizer=tokenizer,
+            aggregation_strategy="first",
+            device=device,
+            stride=128
+        )
+
+    @staticmethod
+    def __ents_to_ne_spans(text: str, ents: list[dict]) -> list[NESpan]:
+        ne_doc = NEDoc(text)
+        return [
+            NESpan(ne_doc, ent['start'], ent['end'], ent['entity_group']) for ent in ents
+        ]
+
+    def predict(self, text: str) -> list[NESpan]:
+        ents = self.__pipe(text)
+        # HF returns a list[dict] for a single string
+        return self.__ents_to_ne_spans(text, ents)
+
+    def bulk_predict(self, texts: list[str], batch_size: int) -> list[list[NESpan]]:
+        # HF returns list[list[dict]] for list[str]
+        all_ents = self.__pipe(texts, batch_size=batch_size)
+        return [self.__ents_to_ne_spans(t, ents) for t, ents in zip(texts, all_ents)]
+
+    def bulk_predict_as_tuples(
+            self, text__context: list[tuple[str, Any]], batch_size: int
+    ) -> tuple[list[list[NESpan]], Any]:
+        texts = [t for t, _ in text__context]
+        contexts = [c for _, c in text__context]
+        all_ents = self.__pipe(texts, batch_size=batch_size)
+
+        ret: list[tuple[list[NESpan], Any]] = []
+        for t, ents, ctx in zip(texts, all_ents, contexts):
+            ret.append((self.__ents_to_ne_spans(t, ents), ctx))
+        return ret  # type: ignore[return-value]
+
+    def __del__(self):
+        # Ensure tempdir (if any) is cleaned up when the instance is garbage-collected
+        try:
+            if self.__tmpdir is not None:
+                self.__tmpdir.cleanup()
+        except Exception:
+            pass
