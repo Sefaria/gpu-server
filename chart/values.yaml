@@ -9,9 +9,11 @@ deployment:
     requests:
       cpu: 100m
       memory: 500Mi
+      nvidia.com/gpu: 1
     limits:
       cpu: 200m
       memory: 1Gi
+      nvidia.com/gpu: 1
 
 modelPaths:
   - arch: spacy
