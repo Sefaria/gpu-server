@@ -9,14 +9,16 @@ RUN apt-get update && \
     build-essential \
     python3.11 \
     python3.11-dev \
-    python3-pip \
+    python3.11-venv \
     git \
     wget && \
     rm -rf /var/lib/apt/lists/*
 
-# Set Python 3.11 as the default python
-RUN update-alternatives --install /usr/bin/python python /usr/bin/python3.11 1 \
-    && update-alternatives --install /usr/bin/pip pip /usr/bin/pip3 1
+# Set up venv for Python 3.11
+RUN /usr/bin/python3.11 -m venv /opt/py311 \
+ && /opt/py311/bin/python -m ensurepip --upgrade \
+ && /opt/py311/bin/python -m pip install --upgrade pip setuptools wheel
+ENV PATH="/opt/py311/bin:${PATH}"
 
 WORKDIR /app
 
@@ -24,8 +26,8 @@ RUN apt-get update && apt-get install -y git && rm -rf /var/lib/apt/lists/*
 
 COPY requirements.txt .
 
-RUN pip install --no-cache-dir -r requirements.txt
-RUN pip install --no-cache-dir gunicorn cupy-cuda12x spacy[cuda122]~=3.7.0
+RUN python -m pip install --no-cache-dir -r requirements.txt
+RUN python -m pip install --no-cache-dir gunicorn cupy-cuda12x spacy[cuda122]~=3.7.0
 
 COPY . .
 
