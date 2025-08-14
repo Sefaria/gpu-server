@@ -12,7 +12,7 @@ class NERFactory:
         if model_type == "spacy":
             return SpacyNER(model_location)
         elif model_type == "huggingface":
-            return HuggingFaceNER()
+            return HuggingFaceNER(model_location)
         else:
             raise ValueError(f"Unknown model type: {model_type}")
 
@@ -108,6 +108,13 @@ class HuggingFaceNER(AbstractNER):
     - Uses the pipeline() with aggregation_strategy="simple" to get character offsets.
     - Returns NESpan objects built from (start, end, label).
     """
+    LABEL2ID = {
+        "O": 0,
+        "I-מקור": 1,
+        "I-בן-אדם": 2,
+        "B-מקור": 3,
+        "B-בן-אדם": 4
+    }
 
     def __init__(self, model_location: str):
         self.__tmpdir = None
@@ -116,8 +123,8 @@ class HuggingFaceNER(AbstractNER):
     def __load_pipeline(self, model_location: str):
         # Lazily import so the rest of the module can be used without transformers installed
         try:
-            from transformers import AutoTokenizer, AutoModelForTokenClassification, pipeline
             import torch
+            from transformers import AutoTokenizer, AutoModelForTokenClassification, pipeline
         except ImportError as e:
             raise ImportError(
                 "HuggingFaceNER requires the 'transformers' and 'torch' packages."
@@ -133,7 +140,11 @@ class HuggingFaceNER(AbstractNER):
 
         # Load tokenizer/model and build a pipeline
         tokenizer = AutoTokenizer.from_pretrained(local_location)
-        self.__model = AutoModelForTokenClassification.from_pretrained(local_location)
+        self.__model = AutoModelForTokenClassification.from_pretrained(
+            local_location,
+            label2id=self.LABEL2ID,
+            id2label={i: label for label, i in self.LABEL2ID.items()}
+        )
         device = 0 if torch.cuda.is_available() else -1
 
         return pipeline(
