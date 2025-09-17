@@ -16,9 +16,9 @@ deployment:
       nvidia.com/gpu: 1
 
 modelPaths:
-  - arch: spacy
+  - arch: huggingface
     lang: he
-    path: gs://sefaria-ml-models/ref_model.tar.gz
+    path: gs://sefaria-ml-models/he_ref_model_berel.tar.gz
     type: named_entity
   - arch: spacy
     lang: en
