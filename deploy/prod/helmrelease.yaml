@@ -1,0 +1,33 @@
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: ner-gpu
+  labels:
+    branch: remove-linker-pod
+spec:
+  interval: 5m
+  timeout: 30m
+  chart:
+    spec:
+      chart: sefaria-ner-server
+      sourceRef:
+        kind: HelmRepository
+        name: sefaria-ner-helm-repo
+        namespace: default
+      interval: 1m
+  upgrade:
+    remediation:
+      remediateLastFailure: false
+  values:
+    deployment:
+      image:
+        tag: 1.10.0 # {"$imagepolicy": "default:remove-linker-pod-gpu:tag"}
+        registry: us-east1-docker.pkg.dev/production-deployment/containers
+      resources:
+        limits:
+          cpu: 1
+          memory: 3.8Gi
+    serviceAccount:
+      create: false
+      name: ner-server
