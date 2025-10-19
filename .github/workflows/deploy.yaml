@@ -1,0 +1,52 @@
+name: Deploy to Productiom
+
+on:
+  workflow_call:
+    inputs:
+      appVersion:
+        type: string
+        required: true
+        default: latest
+        description: App version to install (without the v prefix)
+      chartVersion:
+        type: string
+        required: true
+        default: latest
+        description: Chart version to install (without the helm- tag prefix)
+
+jobs:
+  deploy:
+    if: |
+      (github.repository == 'sefaria/gpu-server')
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: fetch head of branch to ensure semantic can run
+        run: git pull origin $GITHUB_REF
+      - name: process inputs
+        id: vars
+        run: |
+          CHART_VERSION="${{github.event.inputs.chartVersion}}"
+          APP_VERSION="${{ github.event.inputs.appVersion }}"
+          if [[ "$CHART_VERSION" == "latest" ]]; then
+            CHART_VERSION=$(git describe --tags --match="helm*"  --abbrev=0 | sed 's/helm-//')
+          fi
+          if [[ "$APP_VERSION" == "latest" ]]; then
+            APP_VERSION=$(git describe --tags --match="v*"  --abbrev=0 | sed 's/^v//')
+          fi
+          echo "chartVersion=$CHART_VERSION" >> $GITHUB_OUTPUT
+          echo "appVersion=$APP_VERSION" >> $GITHUB_OUTPUT
+      - name: "Version Info:"
+        run: |
+          echo App: "${{ steps.vars.outputs.appVersion }}"
+          echo Chart: "${{ steps.vars.outputs.chartVersion }}"
+      - name: Deploy
+        run: |
+          curl \
+          -X POST \
+          -H "Accept: application/vnd.github.v3+json" \
+          -H "Authorization: Bearer ${{ secrets.API_TOKEN }}" \
+          https://api.github.com/repos/Sefaria/infrastructure/actions/workflows/deploy-prod-gpu.yaml/dispatches \
+          -d '{"ref":"main", "inputs": { "appVersion": "${{ steps.vars.outputs.appVersion }}", "chartVersion": "${{ steps.vars.outputs.chartVersion }}" }}'
