@@ -46,7 +46,7 @@ jobs:
         run: |
           if [[ -z "${{ steps.semantic.outputs.new_release_version }}" ]]; then
             if [[ -z "$(git tag --points-at HEAD -l 'v*')" ]]; then
-              echo "No release version available"
+              echo "No release version available" 
               exit 1
             else
             echo "appVersion=$(git tag --points-at HEAD -l 'v*')" >> $GITHUB_OUTPUT
