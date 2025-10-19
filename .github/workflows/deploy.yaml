@@ -13,6 +13,18 @@ on:
         required: true
         default: latest
         description: Chart version to install (without the helm- tag prefix)
+  workflow_dispatch:
+    inputs:
+      appVersion:
+        type: string
+        required: true
+        default: latest
+        description: App version to install (without the v prefix)
+      chartVersion:
+        type: string
+        required: true
+        default: latest
+        description: Chart version to install (without the helm- tag prefix)
 
 jobs:
   deploy:
