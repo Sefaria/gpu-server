@@ -17,6 +17,7 @@ class JSONFormatter(logging.Formatter):
             'function': record.funcName,
             'line': record.lineno
         }
+        
         if hasattr(record, 'duration'):
             log_entry['duration_ms'] = record.duration
         if hasattr(record, 'endpoint'):
