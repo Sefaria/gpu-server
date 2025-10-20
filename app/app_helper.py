@@ -20,7 +20,7 @@ def make_bulk_recognize_entities_output(texts, ner_model, ref_part_model, with_s
     return _bulk_serialize_linker_entities(results, with_span_text)
 
 
-def _get_linker_entities(text, ner_model, ref_part_model):
+def _get_linker_entities(text: str, ner_model, ref_part_model):
     """
     Extracts named entities and reference parts from the given text using the provided models.
 
