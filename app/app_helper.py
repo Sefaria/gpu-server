@@ -1,5 +1,6 @@
 from functools import reduce
 from collections import defaultdict
+from ne_span import NESpan
 
 
 BATCH_SIZE = 150
@@ -19,7 +20,7 @@ def make_bulk_recognize_entities_output(texts, ner_model, ref_part_model, with_s
     return _bulk_serialize_linker_entities(results, with_span_text)
 
 
-def _get_linker_entities(text, ner_model, ref_part_model):
+def _get_linker_entities(text: str, ner_model, ref_part_model):
     """
     Extracts named entities and reference parts from the given text using the provided models.
 
@@ -35,7 +36,7 @@ def _get_linker_entities(text, ner_model, ref_part_model):
     return cit_spans, ref_parts, other_spans
 
 
-def _partition_spans(spans):
+def _partition_spans(spans: list[NESpan]):
     cit_spans, other_spans = [], []
     for span in spans:
         if LABEL2TYPE.get(span.label) == 'citation':
@@ -45,7 +46,7 @@ def _partition_spans(spans):
     return cit_spans, other_spans
 
 
-def _bulk_partition_spans(spans_list):
+def _bulk_partition_spans(spans_list: list[list[NESpan]]):
     cit_spans_list, other_spans_list = [], []
     for spans in spans_list:
         inner_cit_spans, inner_other_spans = _partition_spans(spans)

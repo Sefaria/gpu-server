@@ -27,7 +27,7 @@ app.kubernetes.io/managed-by: {{ .Release.Service }}
 {{- end }}
 
 {{- define "nerServer.configfiles.name" -}}
-{{ .Values.serviceAccount.name | default .Release.Name }}-files
+{{ default .Release.Name }}-files
 {{- end }}
 
 {{- define "nerServer.configfiles.config" -}}
