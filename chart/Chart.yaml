@@ -9,5 +9,5 @@ maintainers:
   - name: Sefaria
     email: dev@sefaria.org
 type: application
-version: 1.3.0
+version: 1.4.0
 appVersion: v1.12.0
