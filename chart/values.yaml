@@ -11,7 +11,7 @@ deployment:
       memory: 500Mi
       nvidia.com/gpu: 1
     limits:
-      cpu: 200m
+      cpu: 500m
       memory: 3.8Gi
       nvidia.com/gpu: 1
 
