@@ -75,6 +75,8 @@ def create_models_from_config(config):
     model_configs = config['MODEL_PATHS']
     models_by_type_and_lang = {}
     for cfg in model_configs:
+        if not cfg.get('path'):
+            continue
         model_type = cfg['type']
         if model_type not in models_by_type_and_lang:
             models_by_type_and_lang[model_type] = {}
